@@ -1,0 +1,10 @@
+docker ps
+
+http://192.168.99.100:5000/post_player
+
+
+DATA BASE
+
+\dt
+SELECT * FROM player;
+DROP TABLE player;
