@@ -8,3 +8,17 @@ DATA BASE
 \dt
 SELECT * FROM player;
 DROP TABLE player;
+
+
+FLASK DATABASE
+https://www.youtube.com/watch?v=xTumGVC90_0
+https://www.youtube.com/watch?v=oAKRifxUJWs
+
+
+sql
+https://www.w3schools.com/sql/sql_delete.asp
+
+flask
+http://flask.pocoo.org/docs/0.12/quickstart/#a-minimal-application
+
+docker rm -f $(docker ps -aq)
