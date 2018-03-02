@@ -106,7 +106,6 @@ def add_player_to_guild():
 def pickup_item():
     # {"item_id": "1", "player_id": "1"}
     data = request.get_json()
-    query_user = Player.query.filter_by(id=data['player_id']).first()
 
     try:
         query_user = Player.query.filter_by(id=data['player_id']).first()
@@ -181,6 +180,7 @@ def delete_guild():
     else:
         return "cant find guild"
 
+
 @app.route('/create_item', methods=['POST'])
 def create_item():
     item = Item()
@@ -205,13 +205,23 @@ class Guild(db.Model):
         return '<Guild:{}>'.format(self.id)
 
 
+item_ownership = db.Table('item_ownership',db.Model.metadata,
+    db.Column('id', db.Integer, db.ForeignKey('players.id')),
+    db.Column('id', db.Integer, db.ForeignKey('items.id'))
+)
+
+class Item(db.Model):
+    __tablename__ = 'items'
+    id = db.Column(db.Integer, primary_key=True)
+
 class Player(db.Model):
+    __tablename__ = 'players'
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(120), unique=True)
     email = db.Column(db.String(120), unique=True)
     skill_points = db.Column(db.Integer, unique=False)
-    items = db.Column(db.Integer, unique=False)
     status = db.Column(db.String(120), unique=False)
+    backpack = db.relationship('Item',secondary=item_ownership)
     guild_id = db.Column(db.Integer, db.ForeignKey('guild.id', ondelete='CASCADE'))
 
     # id = db.Column(db.Integer, db.ForeignKey('sensor_data.id', ondelete='CASCADE'), primary_key=True)
@@ -226,22 +236,33 @@ class Player(db.Model):
         return '<Player:{}>'.format(self.id)
 
 
-class Item(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
 
 
 if __name__ == '__main__':
     # bob = Player(username='Bob', email='bob@gmail.com')
     # lisa = Player(username='lisa', email='lisa@gmail.com')
     # john = Player(username='john', email='john@gmail.com')
-    #
-    #
+
+    # apple = Item()
+    # apple2 = Item()
+    # apple3 = Item()
+    # apple4 = Item()
+    # apple5 = Item()
     # coke = Guild(guild_name='coke', country_code="canada")
     # sprite = Guild(guild_name='sprite', country_code="canada")
     #
     # # bob.books = [dune, moby_dick]
     # # carol.books = [fahrenheit]
     #
+    # db.session.add(apple)
+    # db.session.add(apple2)
+    # db.session.add(apple3)
+    # db.session.add(apple4)
+    # db.session.add(apple5)
+    #
+    # johnny = Player(username='johnny', email='johnny@gmail.com')
+    # apple6 = Item()
+    # johnny.children.append(s)
     # db.session.add(bob)
     # db.session.add(lisa)
     # db.session.add(john)

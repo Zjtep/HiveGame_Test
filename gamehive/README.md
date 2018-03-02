@@ -148,9 +148,10 @@ Type "help", "copyright", "credits" or "license" for more information.
 You can get a shell on the database server by running `psql` inside the postgres container, supplying the username and password on the command line:
 
 ```
-$ docker exec -ti gamehive_postgres_1 psql gamehive gamehive
+$ docker exec -ti gamehive_postgres_1 psql gamehive gamehivedocker exec -ti gamehive_postgres_1 psql gamehive gamehivedocker exec -ti gamehive_postgres_1 psql gamehive gamehive
 psql (9.6.6)
 Type "help" for help.
 
 gamehive=#
 ```
+docker exec -ti gamehive_postgres_1 psql gamehive gamehivedocker exec -ti gamehive_postgres_1 psql gamehive gamehivedocker exec -ti gamehive_postgres_1 psql gamehive gamehive
