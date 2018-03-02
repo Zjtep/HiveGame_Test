@@ -133,9 +133,15 @@ def pickup_item():
 
                     blah = blah + str(ownership.item_id)
                     if (str(data['item_id']) == str(ownership.item_id)) and (str(ownership.players_id) == str(member.id)):
+                        temp = member.skill_points - 1
+                        Player.query.filter_by(id=member.id).update(dict(skill_points=temp))
+
                         other_player = Player.query.get(ownership.players_id)
                         other_player.backpack.remove(query_item)
                         # return jsonify({'item_id':blah})
+
+            temp = query_user.skill_points + 1
+            Player.query.filter_by(id=query_user.id).update(dict(skill_points=temp))
             player = Player.query.get(query_user.id)
             player.backpack.append(query_item)
             db.session.commit()
