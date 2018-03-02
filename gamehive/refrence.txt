@@ -1,0 +1,103 @@
+student_identifier = db.Table('student_identifier',
+    db.Column('class_id', db.Integer, db.ForeignKey('classes.class_id')),
+    db.Column('user_id', db.Integer, db.ForeignKey('students.user_id'))
+)
+
+class Student(db.Model):
+    __tablename__ = 'students'
+    user_id = db.Column(db.Integer, primary_key=True)
+    user_fistName = db.Column(db.String(64))
+    user_lastName = db.Column(db.String(64))
+    user_email = db.Column(db.String(128), unique=True)
+
+
+class Class(db.Model):
+    __tablename__ = 'classes'
+    class_id = db.Column(db.Integer, primary_key=True)
+    class_name = db.Column(db.String(128), unique=True)
+    children = db.relationship("Student",
+                    secondary=student_identifier)
+
+s = Student()
+c = Class()
+c.children.append(s)
+db.session.add(c)
+db.session.commit()
+
+
+association_table = db.Table('association', db.Model.metadata,
+    db.Column('left_id', db.Integer, db.ForeignKey('left.id')),
+    db.Column('right_id', db.Integer, db.ForeignKey('right.id'))
+)
+
+class Parent(db.Model):
+    __tablename__ = 'left'
+    id = db.Column(db.Integer, primary_key=True)
+    children = db.relationship("Child",
+                    secondary=association_table)
+
+class Child(db.Model):
+    __tablename__ = 'right'
+    id = db.Column(db.Integer, primary_key=True)
+
+
+p = Parent()
+c = Child()
+p.children.append(c)
+db.session.add(p)
+db.session.commit()
+
+
+
+# ... this will be used to create and update a user
+@route('create/<userid>', methods=["GET"])
+def get_user_form(userid):
+    # ... Get the Person
+    user = Person()
+    if userid:
+        # ... if userid supplied, use existing Person object
+        user = Person.query.get(userid)
+
+    # ... Populate the form
+    person_form = PersonAddressForm(obj=user)
+
+    # ... return form
+    return render_template('somepage.html', form=person_form)
+
+@route('create/<userid>', methods=["POST"])
+def post_person_form(userid):
+    person_form = PersonAddressForm(request.form)
+
+    if person_form.validate():
+        # ... Get db object
+        person = db.session.query(Person).get(form.id)
+
+        # ... Add changes to the object from the form
+        person_form.populate_obj(obj=person_address)
+
+        # ... Get addresses
+        addresses = form.addresses.raw_data
+
+        # ... loop over and add to person
+        for address in addresses:
+            # Add or create an address
+            actual_address = db.session.query(Address).get(address.id)
+
+            # ... check if address is existing
+            if not actual_address:
+                # ... if address not existing, create new one
+                actual_address = Address(address.name)
+                db.session.add(actual_address)
+
+            # ... Append new or created address to person
+            person.addresses.append(actual_address)
+
+        # ... save changes to the db
+        db.session.commit()
+
+        # ... Update/Create complete
+        return redirect(url_for('get_users'))
+
+    else:
+        # ... form not valid, notify user
+        # ...

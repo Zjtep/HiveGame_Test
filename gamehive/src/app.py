@@ -51,7 +51,7 @@ def edit_player():
     try:
         query_user = Player.query.filter_by(id=data['id']).first()
     except:
-        return "Enter ID"
+        return "Enter valid ID"
 
     if query_user is not None:
         Player.query.filter_by(id=query_user.id).update(dict(username=data['username'], email=data['email']))
@@ -70,13 +70,11 @@ def delete_player():
     try:
         query_user = Player.query.filter_by(id=data['id']).first()
     except:
-        return "Enter ID"
-
-    # query_username = Player.query.filter_by(username=data['username']).first()
-    # query_email = Player.query.filter_by(username=data['email']).first()
+        return "Enter valid ID"
 
     if query_user is not None:
         # Player.query.filter_by(id=query_user.id).delete()
+        Player.query.filter_by(id=query_user.id).update(dict(guild_id=None))
         Player.query.filter_by(id=query_user.id).update(dict(status='disabled'))
         db.session.commit()
         return "deleted user"
@@ -94,7 +92,8 @@ def add_player_to_guild():
     except:
         return "Enter player/guild"
 
-    if query_user and query_guild is not None:
+    if (query_user and query_guild is not None) and (query_user.status and query_guild.status is not "disabled"):
+
         Player.query.filter_by(id=query_user.id).update(dict(guild_id=data['guild_id']))
         db.session.commit()
         return "added to guild"
@@ -117,9 +116,17 @@ def pickup_item():
         if query_user.guild_id is None:
             temp = query_user.skill_points + 1
             Player.query.filter_by(id=query_user.id).update(dict(skill_points=temp))
+
+            player = Player.query.get(query_user.id)
+            player.backpack.append(query_item)
             db.session.commit()
             return "added to Skill"
         else:
+            query_guild_members = Player.query.filter_by(guild_id=query_user.guild_id).all()
+            player = Player.query.get(query_user.id)
+
+            player.backpack.append(query_item)
+            db.session.commit()
             return "your in guild"
     else:
         return "cant find player or item"
@@ -150,7 +157,7 @@ def edit_guild():
     try:
         query_guild = Guild.query.filter_by(id=data['id']).first()
     except:
-        return "Enter ID"
+        return "Enter valid ID"
 
     if query_guild is not None:
         Guild.query.filter_by(id=query_guild.id).update(
@@ -170,7 +177,7 @@ def delete_guild():
     try:
         query_guild = Guild.query.filter_by(id=data['id']).first()
     except:
-        return "Enter ID"
+        return "Enter valid ID"
 
     if query_guild is not None:
         # Guild.query.filter_by(id=query_guild.id).delete()
@@ -206,8 +213,8 @@ class Guild(db.Model):
 
 
 item_ownership = db.Table('item_ownership',db.Model.metadata,
-    db.Column('id', db.Integer, db.ForeignKey('players.id')),
-    db.Column('id', db.Integer, db.ForeignKey('items.id'))
+    db.Column('players_id', db.Integer, db.ForeignKey('players.id')),
+    db.Column('item_id', db.Integer, db.ForeignKey('items.id'))
 )
 
 class Item(db.Model):
@@ -232,8 +239,8 @@ class Player(db.Model):
         self.status = "active"
         self.skill_points = 0
 
-    def __repr__(self):
-        return '<Player:{}>'.format(self.id)
+    # def __repr__(self):
+    #     return '<Player:{}>'.format(self.id)
 
 
 
@@ -262,12 +269,12 @@ if __name__ == '__main__':
     #
     # johnny = Player(username='johnny', email='johnny@gmail.com')
     # apple6 = Item()
-    # johnny.children.append(s)
+    # johnny.backpack.append(apple6)
     # db.session.add(bob)
     # db.session.add(lisa)
     # db.session.add(john)
-    # db.session.add(sprite)
-    # db.session.add(coke)
+    # # db.session.add(sprite)
+    # db.session.add(johnny)
     # db.session.commit()
     db.create_all()
 
