@@ -123,11 +123,24 @@ def pickup_item():
             return "added to Skill"
         else:
             query_guild_members = Player.query.filter_by(guild_id=query_user.guild_id).all()
-            player = Player.query.get(query_user.id)
+            query_ownership = db.session.query(item_ownership).all()
+            # return jsonify({'devices': query_ownership})
 
+            blah = ""
+            # for member in query_guild_members:
+            for member in query_guild_members:
+                for ownership in query_ownership:
+
+                    blah = blah + str(ownership.item_id)
+                    if (str(data['item_id']) == str(ownership.item_id)) and (str(ownership.players_id) == str(member.id)):
+                        other_player = Player.query.get(ownership.players_id)
+                        other_player.backpack.remove(query_item)
+                        # return jsonify({'item_id':blah})
+            player = Player.query.get(query_user.id)
             player.backpack.append(query_item)
             db.session.commit()
-            return "your in guild"
+
+            return "stole guild member's item"
     else:
         return "cant find player or item"
 
@@ -195,6 +208,25 @@ def create_item():
     db.session.commit()
     return "added item"
 
+@app.route('/delete_item', methods=['POST'])
+def delete_item():
+    # {"id":"1"}
+    data = request.get_json()
+
+    # player = Player(data['username'], data['email'])
+    try:
+        query_item= Item.query.filter_by(id=data['id']).first()
+    except:
+        return "Enter valid ID"
+
+    if query_item is not None:
+        # Guild.query.filter_by(id=query_guild.id).delete()
+        Item.query.filter_by(id=query_item.id).update(dict(status='disabled'))
+        db.session.commit()
+        return "deleted Item"
+    else:
+        return "cant find Item"
+
 
 class Guild(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -220,6 +252,9 @@ item_ownership = db.Table('item_ownership',db.Model.metadata,
 class Item(db.Model):
     __tablename__ = 'items'
     id = db.Column(db.Integer, primary_key=True)
+    status = db.Column(db.String(120), unique=False)
+    def __init__(self):
+        self.status = "active"
 
 class Player(db.Model):
     __tablename__ = 'players'
