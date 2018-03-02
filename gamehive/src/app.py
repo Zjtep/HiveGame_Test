@@ -2,8 +2,10 @@ from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 from flask import render_template
 from flask import request, redirect, url_for, jsonify
+
 import sys
 from sqlalchemy import or_
+from sqlalchemy.orm import load_only
 
 
 class Config(object):
@@ -25,17 +27,6 @@ def root():
 @app.route('/create_player', methods=['POST'])
 def create_player():
     # {"username": "abcd", "email": "abcd@gmail.com"}
-
-    # return 'Game Hive Player API']
-    # print (request.form, file=sys.stderr)
-    # print("moooooooo", file=sys.stderr)
-
-
-    # player = Player(request.arg.get('username'), request.arg.get('email'))
-    # db.session.add(player)
-    # db.session.commit()
-    # return redirect(url_for('root'))
-    # return '<h1> Hello{}.'.format(player)
 
     data = request.get_json()
 
@@ -85,15 +76,16 @@ def delete_player():
     # query_email = Player.query.filter_by(username=data['email']).first()
 
     if query_user is not None:
-        Player.query.filter_by(id=query_user.id).delete()
+        # Player.query.filter_by(id=query_user.id).delete()
+        Player.query.filter_by(id=query_user.id).update(dict(status='disabled'))
         db.session.commit()
         return "deleted user"
     else:
         return "cant find user"
 
 
-@app.route('/add_player', methods=['POST'])
-def add_player():
+@app.route('/add_player_to_guild', methods=['POST'])
+def add_player_to_guild():
     # {"guild_id": "1", "player_id": "1"}
     data = request.get_json()
     try:
@@ -108,6 +100,30 @@ def add_player():
         return "added to guild"
     else:
         return "cant find player or guild"
+
+
+@app.route('/pickup_item', methods=['POST'])
+def pickup_item():
+    # {"item_id": "1", "player_id": "1"}
+    data = request.get_json()
+    query_user = Player.query.filter_by(id=data['player_id']).first()
+
+    try:
+        query_user = Player.query.filter_by(id=data['player_id']).first()
+        query_item = Item.query.filter_by(id=data['item_id']).first()
+    except:
+        return "Enter player/item"
+
+    if query_user and query_item is not None:
+        if query_user.guild_id is None:
+            temp = query_user.skill_points + 1
+            Player.query.filter_by(id=query_user.id).update(dict(skill_points=temp))
+            db.session.commit()
+            return "added to Skill"
+        else:
+            return "your in guild"
+    else:
+        return "cant find player or item"
 
 
 @app.route('/create_guild', methods=['POST'])
@@ -126,6 +142,7 @@ def create_guild():
         db.session.commit()
         return "added guild"
 
+
 @app.route('/edit_guild', methods=['POST'])
 def edit_guild():
     # {"country_code":"USA","guild_name":"FunTown","id":1}
@@ -137,11 +154,13 @@ def edit_guild():
         return "Enter ID"
 
     if query_guild is not None:
-        Guild.query.filter_by(id=query_guild.id).update(dict(guild_name=data['guild_name'], country_code=data['country_code']))
+        Guild.query.filter_by(id=query_guild.id).update(
+            dict(guild_name=data['guild_name'], country_code=data['country_code']))
         db.session.commit()
         return "updated guild_name"
     else:
         return "can't find guild_name"
+
 
 @app.route('/delete_guild', methods=['POST'])
 def delete_guild():
@@ -154,15 +173,20 @@ def delete_guild():
     except:
         return "Enter ID"
 
-    # query_username = Player.query.filter_by(username=data['username']).first()
-    # query_email = Player.query.filter_by(username=data['email']).first()
-
     if query_guild is not None:
-        Guild.query.filter_by(id=query_guild.id).delete()
+        # Guild.query.filter_by(id=query_guild.id).delete()
+        Guild.query.filter_by(id=query_guild.id).update(dict(status='disabled'))
         db.session.commit()
         return "deleted guild"
     else:
         return "cant find guild"
+
+@app.route('/create_item', methods=['POST'])
+def create_item():
+    item = Item()
+    db.session.add(item)
+    db.session.commit()
+    return "added item"
 
 
 class Guild(db.Model):
@@ -170,10 +194,12 @@ class Guild(db.Model):
     guild_name = db.Column(db.String(120), unique=True)
     country_code = db.Column(db.String(120), unique=False)
     players = db.relationship('Player', backref='guild', lazy='dynamic')
+    status = db.Column(db.String(120), unique=False)
 
     def __init__(self, guild_name, country_code):
         self.guild_name = guild_name
         self.country_code = country_code
+        self.status = "active"
 
     def __repr__(self):
         return '<Guild:{}>'.format(self.id)
@@ -185,14 +211,23 @@ class Player(db.Model):
     email = db.Column(db.String(120), unique=True)
     skill_points = db.Column(db.Integer, unique=False)
     items = db.Column(db.Integer, unique=False)
-    guild_id = db.Column(db.Integer, db.ForeignKey('guild.id'))
+    status = db.Column(db.String(120), unique=False)
+    guild_id = db.Column(db.Integer, db.ForeignKey('guild.id', ondelete='CASCADE'))
+
+    # id = db.Column(db.Integer, db.ForeignKey('sensor_data.id', ondelete='CASCADE'), primary_key=True)
 
     def __init__(self, username, email):
         self.username = username
         self.email = email
+        self.status = "active"
+        self.skill_points = 0
 
     def __repr__(self):
         return '<Player:{}>'.format(self.id)
+
+
+class Item(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
 
 
 if __name__ == '__main__':
