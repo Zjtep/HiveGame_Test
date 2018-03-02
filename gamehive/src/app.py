@@ -24,6 +24,8 @@ def root():
 
 @app.route('/create_player', methods=['POST'])
 def create_player():
+    # {"username": "abcd", "email": "abcd@gmail.com"}
+
     # return 'Game Hive Player API']
     # print (request.form, file=sys.stderr)
     # print("moooooooo", file=sys.stderr)
@@ -46,69 +48,121 @@ def create_player():
         db.session.add(player)
         db.session.commit()
         # return jsonify(player)
-    return jsonify(data['username'], data['email'])
+        return "added user"
+        # return jsonify(data['username'], data['email'])
 
 
 @app.route('/edit_player', methods=['POST'])
 def edit_player():
+    # {"username":"bbabcde","email":"abcd@gmail.com","id":1}
     data = request.get_json()
 
-    query_user = Player.query.filter_by(username=data['username']).first()
+    try:
+        query_user = Player.query.filter_by(id=data['id']).first()
+    except:
+        return "Enter ID"
 
     if query_user is not None:
         Player.query.filter_by(id=query_user.id).update(dict(username=data['username'], email=data['email']))
         db.session.commit()
-        return "updated"
+        return "updated user"
     else:
         return "can't find user"
-        # return jsonify(player)
-        # return jsonify(data['username'], data['email'])
 
 
 @app.route('/delete_player', methods=['POST'])
 def delete_player():
+    # {"id":"1"}
     data = request.get_json()
 
     # player = Player(data['username'], data['email'])
+    try:
+        query_user = Player.query.filter_by(id=data['id']).first()
+    except:
+        return "Enter ID"
 
-    query_user_id = Player.query.filter_by(id=data['id']).first()
     # query_username = Player.query.filter_by(username=data['username']).first()
     # query_email = Player.query.filter_by(username=data['email']).first()
 
-    if query_user_id is not None:
-        Player.query.filter_by(id=query_user_id.id).delete()
+    if query_user is not None:
+        Player.query.filter_by(id=query_user.id).delete()
         db.session.commit()
-        return "deleted"
+        return "deleted user"
     else:
-        return "cant find"
+        return "cant find user"
 
 
 @app.route('/add_player', methods=['POST'])
 def add_player():
+    # {"guild_id": "1", "player_id": "1"}
     data = request.get_json()
+    try:
+        query_user = Player.query.filter_by(id=data['player_id']).first()
+        query_guild = Guild.query.filter_by(id=data['guild_id']).first()
+    except:
+        return "Enter player/guild"
 
-    query_user_id = Player.query.filter_by(id=data['player_id']).first()
-    if query_user_id is not None:
-        Player.query.filter_by(id=query_user_id.id).update(dict(guild_id=data['guild_id']))
+    if query_user and query_guild is not None:
+        Player.query.filter_by(id=query_user.id).update(dict(guild_id=data['guild_id']))
         db.session.commit()
         return "added to guild"
     else:
-        return "cant find player"
+        return "cant find player or guild"
 
 
 @app.route('/create_guild', methods=['POST'])
 def create_guild():
+    # {"guild_name": "foodies", "country_code": "canada"}
+
     data = request.get_json()
 
-    query_guide_name = Guild.query.filter_by(guild_name=data['guild_name']).first()
+    query_guild = Guild.query.filter_by(guild_name=data['guild_name']).first()
 
-    if query_guide_name is not None:
+    if query_guild is not None:
         return "guide_name already in database"
     else:
-        guild = Guild(data['guide_name'], data['country_code'])
+        guild = Guild(data['guild_name'], data['country_code'])
         db.session.add(guild)
         db.session.commit()
         return "added guild"
+
+@app.route('/edit_guild', methods=['POST'])
+def edit_guild():
+    # {"country_code":"USA","guild_name":"FunTown","id":1}
+    data = request.get_json()
+
+    try:
+        query_guild = Guild.query.filter_by(id=data['id']).first()
+    except:
+        return "Enter ID"
+
+    if query_guild is not None:
+        Guild.query.filter_by(id=query_guild.id).update(dict(guild_name=data['guild_name'], country_code=data['country_code']))
+        db.session.commit()
+        return "updated guild_name"
+    else:
+        return "can't find guild_name"
+
+@app.route('/delete_guild', methods=['POST'])
+def delete_guild():
+    # {"id":"1"}
+    data = request.get_json()
+
+    # player = Player(data['username'], data['email'])
+    try:
+        query_guild = Guild.query.filter_by(id=data['id']).first()
+    except:
+        return "Enter ID"
+
+    # query_username = Player.query.filter_by(username=data['username']).first()
+    # query_email = Player.query.filter_by(username=data['email']).first()
+
+    if query_guild is not None:
+        Guild.query.filter_by(id=query_guild.id).delete()
+        db.session.commit()
+        return "deleted guild"
+    else:
+        return "cant find guild"
 
 
 class Guild(db.Model):
@@ -139,9 +193,6 @@ class Player(db.Model):
 
     def __repr__(self):
         return '<Player:{}>'.format(self.id)
-
-
-# class Guilds(db.Model):
 
 
 if __name__ == '__main__':

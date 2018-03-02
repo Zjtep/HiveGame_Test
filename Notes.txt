@@ -25,5 +25,11 @@ docker rm -f $(docker ps -aq)
 
 
 {"username":"abcd","email":"abcd@gmail.com"}
+{"username": "bob", "email": "bob@gmail.com"}
+{"username": "john", "email": "john@gmail.com"}
+{"username": "lisa", "email": "lisa@gmail.com"}
+{"username": "goku", "email": "goku@gmail.com"}
+
 {"id":"1"}
 {"guild_id":"1","player_id":"1"}
+{"guild_name":"foodies","country_code":"canada"}
